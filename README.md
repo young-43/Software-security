@@ -153,6 +153,58 @@
 
 `SourceCode/Sql` 下的建表和插入 SQL 可继续使用，不需要改 SQL 文件。
 
+#### MySQL 8.0 如何初始化数据库（详细步骤）
+下面按“你已经安装好 MySQL 8.0，但数据库还是空的”来写。
+
+1. 确认 MySQL 服务已启动
+   - Windows：先启动 MySQL80 服务（可在“服务”里启动，或用命令 `net start MySQL80`）。
+
+2. 进入项目根目录（你的仓库路径）
+   ```powershell
+   cd C:/Users/username/Desktop/Software-security
+   ```
+   - 上面是示例路径，请改成你自己电脑上的真实目录。
+
+3. 登录 MySQL 8.0
+   ```powershell
+   mysql -u root -p
+   ```
+   - 输入你自己的 root 密码。
+
+4. 执行建库建表脚本
+   ```sql
+   source SourceCode/Sql/contest_web_create.sql;
+   ```
+   - Windows 下也建议使用上面这种 `/` 写法，不要写成反斜杠路径。
+   - 这个脚本会先 `DROP DATABASE IF EXISTS contest_web`，再重新创建，所以可重复执行。
+
+5. 执行初始化数据脚本
+   ```sql
+   source SourceCode/Sql/contest_web_insert.sql;
+   ```
+   - 与上一步一样，路径建议保持 `/` 写法。
+
+6. 验证是否初始化成功
+   ```sql
+   use contest_web;
+   show tables;
+   select count(*) from users;
+   ```
+   - 如果 `users` 有数据（通常 > 0），说明初始化成功。
+
+7. 确认后端配置与 MySQL 一致
+   - 文件：`SourceCode/BackEnd/src/main/resources/application.yml`
+   - 重点确认：
+     - `driver-class-name: com.mysql.cj.jdbc.Driver`
+     - `url: jdbc:mysql://localhost:3306/contest_web?...`
+     - `username` / `password` 是你当前 MySQL 账号密码
+
+8. 图形化工具方式（Navicat / DBeaver）
+   - 新建 MySQL 8.0 连接后，依次运行：
+     - `SourceCode/Sql/contest_web_create.sql`
+     - `SourceCode/Sql/contest_web_insert.sql`
+   - 建议顺序仍是先 create 再 insert。
+
 ### 开发环境
 | 名称               | 早期开发使用的版本          | 后续更新使用的版本           |
 | ------------------ | --------------------------- | ---------------------------- |
