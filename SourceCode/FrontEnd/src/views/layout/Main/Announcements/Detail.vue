@@ -43,13 +43,13 @@ export default {
     announcementLoading() {
       const messageId = this.$route.params.messageId;
       if (!messageId) {
-        this.$message.error("消息查询失败！");
+        this.$message.error("无效的消息ID！");
         return;
       }
       getRequest("/messages/announcement/" + messageId).then((res) => {
-        const data = res && res.data ? res.data.data : null;
+        const data = res.data.data;
         if (!data) {
-          this.$message.error("消息查询失败！");
+          this.$message.error("无法加载消息内容！");
           return;
         }
         // console.log(data);
@@ -62,7 +62,9 @@ export default {
         } else {
           this.$message.error("消息查询失败！");
         }
-      })
+      }).catch(() => {
+        this.$message.error("消息查询失败！");
+      });
     }
   }
 }
