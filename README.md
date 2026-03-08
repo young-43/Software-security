@@ -205,6 +205,35 @@
      - `SourceCode/Sql/contest_web_insert.sql`
    - 建议顺序仍是先 create 再 insert。
 
+9. 如果出现你这种报错（`Incorrect string value` / `Data too long` / 外键失败）
+   - **为什么会这样：**
+     - `Incorrect string value`：通常是连接字符集不是 `utf8mb4`，SQL 文件里的中文被错误解码。
+     - `Data too long`：中文被错误解码后变成乱码长字节，超出字段长度（例如 `VARCHAR(10)`）。
+     - 外键失败：前面用户/角色等插入失败后，后续关联表插入就会因为“父记录不存在”而失败。
+   - **一次性修复步骤（建议直接照抄执行）：**
+     1) 退出当前 mysql 会话，重新用 utf8mb4 登录：
+     ```powershell
+     mysql --default-character-set=utf8mb4 -u root -p
+     ```
+     2) 在 mysql 中确认连接字符集：
+     ```sql
+     show variables like 'character_set_client';
+     show variables like 'character_set_connection';
+     show variables like 'character_set_results';
+     ```
+     3) 重新执行初始化（会重建库）：
+     ```sql
+     source SourceCode/Sql/contest_web_create.sql;
+     source SourceCode/Sql/contest_web_insert.sql;
+     ```
+     4) 验证中文是否正常：
+     ```sql
+     use contest_web;
+     select group_name from `groups`;
+     select count(*) from users;
+     ```
+   - 本仓库 SQL 已补充 `SET NAMES utf8mb4` 且建库字符集为 `utf8mb4`，MySQL 8.0 下可直接使用。
+
 ### 开发环境
 | 名称               | 早期开发使用的版本          | 后续更新使用的版本           |
 | ------------------ | --------------------------- | ---------------------------- |

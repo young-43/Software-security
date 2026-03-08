@@ -5,13 +5,14 @@
  数据库版本：10.6.5
  创建时间：2021-12-28
  修改时间：2022-03-29
- */ -- 创建数据库:  `contest_web`
+*/ -- 创建数据库:  `contest_web`
 -- ------------------------------
+SET NAMES utf8mb4;
 DROP DATABASE
 IF
 	EXISTS `contest_web`;
 CREATE DATABASE `contest_web` DEFAULT CHARACTER 
-SET utf8 COLLATE utf8_general_ci;
+SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `contest_web`;
 /*
 创建群组表:  `groups`
