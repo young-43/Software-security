@@ -59,7 +59,7 @@
    ```
 
 4. **准备数据库（MariaDB）**
-   - 打开 MariaDB（命令行、Navicat、DBeaver 都可以）
+   - 打开 MariaDB（命令行、Navicat、DBeaver 都可以）。如果你没有安装 MariaDB，也可以使用 MySQL（见下方“MariaDB可以替换为MySQL吗？”）。
    - 依次执行下面 2 个 SQL 文件：
      - `SourceCode/Sql/contest_web_create.sql`
      - `SourceCode/Sql/contest_web_insert.sql`
@@ -104,6 +104,34 @@
    - 后端连不上数据库：检查 `application.yml` 里的用户名/密码、数据库名是否一致。
    - 页面没有数据：确认你已经执行了 `contest_web_insert.sql`。
    - 后端报 Redis 连接错误：确认 Redis 已启动且端口是 6379。
+
+### MariaDB可以替换为MySQL吗？
+可以。这个项目可以使用 MySQL 替代 MariaDB，但需要同步修改后端配置（默认仓库仍是 MariaDB 配置）。
+
+需要改 3 处：
+
+1. 修改依赖（`SourceCode/BackEnd/pom.xml`）
+   - 将 `org.mariadb.jdbc:mariadb-java-client` 改为 MySQL 驱动（如 `com.mysql:mysql-connector-j`）。
+
+2. 修改数据源配置（`SourceCode/BackEnd/src/main/resources/application.yml`）
+   - `driver-class-name` 改为 `com.mysql.cj.jdbc.Driver`
+   - `url` 从 `jdbc:mariadb://...` 改为 `jdbc:mysql://...`
+
+3. 修改 MyBatis-Plus 分页方言（`SourceCode/BackEnd/src/main/java/com/zzh/contest/config/MybatisPlusConfig.java`）
+   - 将 `DbType.MARIADB` 改为 `DbType.MYSQL`
+
+示例（application.yml）：
+```yml
+spring:
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/contest_web?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+      username: root
+      password: root
+```
+
+`SourceCode/Sql` 下的建表和插入 SQL 可继续使用，不需要改 SQL 文件。
 
 ### 开发环境
 | 名称               | 早期开发使用的版本          | 后续更新使用的版本           |
