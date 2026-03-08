@@ -30,6 +30,81 @@
 ### 项目启动
 使用idea打开BackEnd和FrontEnd，后端需要jdk1.8，前端需要Vue脚手架和node.js才可运行
 
+### Windows新手从零启动（一步一步照做）
+> 下面按“完全没配过环境”的情况写，建议严格按顺序执行。
+
+1. **先安装必备软件**
+   - Git（下载源码）
+   - JDK 8（后端要求 1.8）
+   - Node.js 18.12.1（前端建议版本）
+   - MariaDB 10.6+（数据库）
+   - Redis（后端用到缓存）
+   - Maven（可选，仓库内有 `mvnw.cmd`，不装也能跑）
+   - 开发工具（推荐 IntelliJ IDEA + VS Code，二选一也可）
+
+2. **安装完成后，先在 PowerShell 验证版本**
+   ```powershell
+   git -v
+   java -version
+   node -v
+   npm -v
+   ```
+   - `java` 显示 1.8.x 即可
+   - `node` 建议是 18.12.1 左右（不要用太新的 22/24）
+
+3. **下载并进入项目目录**
+   ```powershell
+   git clone https://github.com/young-43/Software-security.git
+   cd Software-security
+   ```
+
+4. **准备数据库（MariaDB）**
+   - 打开 MariaDB（命令行、Navicat、DBeaver 都可以）
+   - 依次执行下面 2 个 SQL 文件：
+     - `SourceCode/Sql/contest_web_create.sql`
+     - `SourceCode/Sql/contest_web_insert.sql`
+   - 这一步执行完后，会创建 `contest_web` 数据库并插入测试数据。
+
+5. **检查后端数据库配置**
+   - 文件：`SourceCode/BackEnd/src/main/resources/application.yml`
+   - 默认是本地数据库 `localhost:3306/contest_web`，账号密码通常为 `root/root`。
+   - 如果你的 MariaDB 密码不是 `root`，请把这里改成你自己的密码。
+
+6. **启动 Redis**
+   - 如果你安装的是 Windows 版 Redis，直接启动 Redis 服务或运行 `redis-server.exe`。
+   - 保持 Redis 在运行状态（默认端口 6379）。
+
+7. **启动后端（Spring Boot）**
+   ```powershell
+   cd SourceCode\BackEnd
+   mvnw.cmd spring-boot:run
+   ```
+   - 首次启动会下载依赖，时间较长是正常的。
+   - 看到 Spring Boot 启动成功日志后，后端通常运行在 `http://localhost:8090`（接口前缀一般是 `/api`）。
+
+8. **启动前端（Vue）**
+   ```powershell
+   cd ..\FrontEnd
+   npm install
+   npm run serve
+   ```
+   - 启动后访问：`http://localhost:8080`
+   - 如果出现 `digital envelope routines::unsupported`，请执行：
+     ```powershell
+     setx NODE_OPTIONS "--openssl-legacy-provider"
+     ```
+     关闭并重开 PowerShell 后再执行 `npm run serve`。
+
+9. **登录验证**
+   - 打开浏览器访问 `http://localhost:8080`
+   - 可使用文档中的测试账号登录（例如管理员 `admin/admin`）。
+
+10. **常见问题快速排查**
+   - 前端 `npm install` 失败：先确认 Node 版本是否为 18.x。
+   - 后端连不上数据库：检查 `application.yml` 里的用户名/密码、数据库名是否一致。
+   - 页面没有数据：确认你已经执行了 `contest_web_insert.sql`。
+   - 后端报 Redis 连接错误：确认 Redis 已启动且端口是 6379。
+
 ### 开发环境
 | 名称               | 早期开发使用的版本          | 后续更新使用的版本           |
 | ------------------ | --------------------------- | ---------------------------- |
