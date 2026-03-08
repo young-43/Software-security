@@ -39,14 +39,25 @@ export default {
   //跑马灯高度自适应
   mounted() {
     getRequest("/latestContest").then(res => {
-      if (res.data){
+      if (res && res.data) {
         let data = res.data.data;
+        if (!data) {
+          return;
+        }
         this.contest = data;
+        if (!data.regStartTime || !data.regEndTime || !data.startTime || !data.endTime) {
+          this.text = '暂无比赛时间信息';
+          return;
+        }
         let nowTime = new Date();
         let regStartTime = new Date(data.regStartTime);
         let regEndTime = new Date(data.regEndTime);
         let startTime = new Date(data.startTime);
         let endTime = new Date(data.endTime);
+        if (isNaN(regStartTime.getTime()) || isNaN(regEndTime.getTime()) || isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+          this.text = '暂无比赛时间信息';
+          return;
+        }
         if (nowTime < regStartTime) {
           this.formatTimeStamp(Math.floor((regStartTime - nowTime) / 1000))
           this.text = '距离报名开始还剩';
