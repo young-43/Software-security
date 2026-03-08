@@ -73,6 +73,11 @@
 6. **启动 Redis**
    - 如果你安装的是 Windows 版 Redis，直接启动 Redis 服务或运行 `redis-server.exe`。
    - 保持 Redis 在运行状态（默认端口 6379）。
+   - 可以用下面命令快速验证 Redis 是否启动成功：
+     ```powershell
+     redis-cli -p 6379 ping
+     ```
+     - 返回 `PONG` 说明 Redis 服务正常。
 
 7. **启动后端（Spring Boot）**
    ```powershell
@@ -104,6 +109,51 @@
    - 后端连不上数据库：检查 `application.yml` 里的用户名/密码、数据库名是否一致。
    - 页面没有数据：确认你已经执行了 `contest_web_insert.sql`。
    - 后端报 Redis 连接错误：确认 Redis 已启动且端口是 6379。
+
+### Redis 怎么启动？端口是否必须 6379？怎么改端口？
+不是必须固定 6379。这个项目后端使用 Spring Boot 的 Redis 自动配置：如果你不写 `spring.redis.port`，默认就是 `6379`；你也可以改成任意未占用端口，但要保证 **Redis 服务端端口** 和 **后端配置端口** 一致。
+
+#### 1. 启动 Redis（常见方式）
+   - **Windows（服务方式）**：在“服务”里启动 Redis 服务，或命令行启动 `redis-server.exe`。
+   - **Linux（systemd）**：
+     ```bash
+     sudo systemctl start redis
+     sudo systemctl status redis
+     ```
+   - **Docker**：
+     ```bash
+     docker run -d --name contest-redis -p 6379:6379 redis:7.2
+     ```
+
+#### 2. 端口是否有严格要求？
+   - 对项目本身：**没有硬编码必须 6379**。
+   - 对运行结果：必须“Redis 实际监听端口 == 后端 `application.yml` 配置端口”。
+
+#### 3. 改 Redis 端口的正确步骤
+   - 第一步：改 Redis 服务端配置（`redis.conf`）
+     ```conf
+     port 6380
+     ```
+     - 改完后重启 Redis 服务。
+   - 第二步：改后端配置文件  
+     文件：`SourceCode/BackEnd/src/main/resources/application.yml`
+     ```yml
+     spring:
+       redis:
+         host: localhost
+         port: 6380
+         database: 0
+         timeout: 5000
+     ```
+   - 第三步：验证连通性
+     ```bash
+     redis-cli -p 6380 ping
+     ```
+     - 返回 `PONG` 后再启动后端。
+
+#### 4. 常见错误
+   - Redis 改了端口，但后端还连 6379：会报连接超时/拒绝连接。
+   - Docker 映射端口写错（如 `-p 6379:6380`）：这是“宿主机端口 6379（左侧）:容器端口 6380（右侧）”，后端应连接宿主机端口 6379。
 
 ### MariaDB可以替换为MySQL吗？
 可以。你是 **MySQL 8.0** 的话，按下面 3 个文件直接改即可（默认仓库仍是 MariaDB 配置）。
