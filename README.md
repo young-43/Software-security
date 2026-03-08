@@ -36,7 +36,7 @@
 1. **先安装必备软件**
    - Git（下载源码）
    - JDK 8（后端要求 1.8）
-   - Node.js 18.12.1（前端建议版本）
+   - Node.js 18.x（前端建议主版本）
    - MariaDB 10.6+（数据库）
    - Redis（后端用到缓存）
    - Maven（可选，仓库内有 `mvnw.cmd`，不装也能跑）
@@ -44,13 +44,13 @@
 
 2. **安装完成后，先在 PowerShell 验证版本**
    ```powershell
-   git -v
+   git --version
    java -version
    node -v
    npm -v
    ```
    - `java` 显示 1.8.x 即可
-   - `node` 建议是 18.12.1 左右（不要用太新的 22/24）
+   - `node` 建议是 18.x（不要用太新的 22/24）
 
 3. **下载并进入项目目录**
    ```powershell
@@ -80,7 +80,7 @@
    mvnw.cmd spring-boot:run
    ```
    - 首次启动会下载依赖，时间较长是正常的。
-   - 看到 Spring Boot 启动成功日志后，后端通常运行在 `http://localhost:8090`（接口前缀一般是 `/api`）。
+   - 看到 Spring Boot 启动成功日志后，后端运行在 `http://localhost:8090`，接口前缀是 `/api`（完整前缀：`http://localhost:8090/api`）。
 
 8. **启动前端（Vue）**
    ```powershell
@@ -97,7 +97,7 @@
 
 9. **登录验证**
    - 打开浏览器访问 `http://localhost:8080`
-   - 可使用文档中的测试账号登录（例如管理员 `admin/admin`）。
+   - 执行 `SourceCode/Sql/contest_web_insert.sql` 后，可使用本 README 下方“测试账号”表格中的账号登录（例如管理员 `admin/admin`）。
 
 10. **常见问题快速排查**
    - 前端 `npm install` 失败：先确认 Node 版本是否为 18.x。
