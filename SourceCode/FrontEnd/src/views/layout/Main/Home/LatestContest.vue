@@ -54,7 +54,7 @@ export default {
         let regEndTime = new Date(data.regEndTime);
         let startTime = new Date(data.startTime);
         let endTime = new Date(data.endTime);
-        if (isNaN(regStartTime.getTime()) || isNaN(regEndTime.getTime()) || isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        if ([regStartTime, regEndTime, startTime, endTime].some(item => isNaN(item.getTime()))) {
           this.text = '暂无比赛时间信息';
           return;
         }
