@@ -106,30 +106,50 @@
    - 后端报 Redis 连接错误：确认 Redis 已启动且端口是 6379。
 
 ### MariaDB可以替换为MySQL吗？
-可以。这个项目可以使用 MySQL 替代 MariaDB，但需要同步修改后端配置（默认仓库仍是 MariaDB 配置）。
+可以。你是 **MySQL 8.0** 的话，按下面 3 个文件直接改即可（默认仓库仍是 MariaDB 配置）。
 
 需要改 3 处：
 
 1. 修改依赖（`SourceCode/BackEnd/pom.xml`）
-   - 将 `org.mariadb.jdbc:mariadb-java-client` 改为 MySQL 驱动（如 `com.mysql:mysql-connector-j`）。
+   - 将下面这段删掉：
+   ```xml
+   <dependency>
+       <groupId>org.mariadb.jdbc</groupId>
+       <artifactId>mariadb-java-client</artifactId>
+       <scope>runtime</scope>
+   </dependency>
+   ```
+   - 改成（MySQL 8.0）：
+   ```xml
+   <dependency>
+       <groupId>com.mysql</groupId>
+       <artifactId>mysql-connector-j</artifactId>
+       <version>8.0.33</version>
+       <scope>runtime</scope>
+   </dependency>
+   ```
 
 2. 修改数据源配置（`SourceCode/BackEnd/src/main/resources/application.yml`）
-   - `driver-class-name` 改为 `com.mysql.cj.jdbc.Driver`
-   - `url` 从 `jdbc:mariadb://...` 改为 `jdbc:mysql://...`
+   - 将这两行：
+   ```yml
+   driver-class-name: org.mariadb.jdbc.Driver
+   url: jdbc:mariadb://localhost:3306/contest_web?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+   ```
+   - 改为：
+   ```yml
+   driver-class-name: com.mysql.cj.jdbc.Driver
+   url: jdbc:mysql://localhost:3306/contest_web?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+   ```
 
 3. 修改 MyBatis-Plus 分页方言（`SourceCode/BackEnd/src/main/java/com/zzh/contest/config/MybatisPlusConfig.java`）
-   - 将 `DbType.MARIADB` 改为 `DbType.MYSQL`
-
-示例（application.yml）：
-```yml
-spring:
-  datasource:
-    druid:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/contest_web?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
-      username: root
-      password: root
-```
+   - 将这一行：
+   ```java
+   interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MARIADB));
+   ```
+   - 改为：
+   ```java
+   interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+   ```
 
 `SourceCode/Sql` 下的建表和插入 SQL 可继续使用，不需要改 SQL 文件。
 
