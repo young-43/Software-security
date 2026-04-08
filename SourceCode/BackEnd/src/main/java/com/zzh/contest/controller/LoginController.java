@@ -7,6 +7,7 @@ import com.zzh.contest.utils.IpUtils;
 import com.zzh.contest.utils.RedisCache;
 import com.zzh.contest.utils.result.Result;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +33,9 @@ public class LoginController {
      * @param response 响应
      */
     @GetMapping("/captcha")
-    public void getCaptcha(HttpServletResponse response, @RequestParam String ulid) throws Exception {
+    public void getCaptcha(HttpServletResponse response,
+                           @RequestParam(value = "id", required = false) String id,
+                           @RequestParam(value = "ulid", required = false) String ulid) throws Exception {
         // if (ulid.equals("")) {
         //     return;
         // }
@@ -47,9 +50,14 @@ public class LoginController {
         System.out.println("计算结果为：" + captcha.getArithmeticString());
         // 获取运算的结果
         System.out.println("计算结果为：" + captcha.text());
-        // 将ulid作为key，验证码作为value存入redis
+        // 将id作为key（兼容旧参数ulid），验证码作为value存入redis
+        String captchaKey = StringUtils.hasText(id) ? id : ulid;
+        if (!StringUtils.hasText(captchaKey)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required captcha identifier parameter: id or ulid");
+            return;
+        }
         try {
-            redisCache.setCacheObject(ulid, captcha.text(), 1, TimeUnit.MINUTES);
+            redisCache.setCacheObject(captchaKey, captcha.text(), 1, TimeUnit.MINUTES);
         } catch (Exception e) {
             System.out.println("存入Redis失败");
         } finally {

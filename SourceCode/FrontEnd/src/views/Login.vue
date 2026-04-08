@@ -52,7 +52,7 @@ export default {
         phone: "",
         email: "",
         password: "",
-        datetime: "",
+        captchaId: "",
         captcha: "",
       },
       rules: {
@@ -62,8 +62,8 @@ export default {
     };
   },
   mounted() {
-    // // 页面启动给datetime赋值时间戳
-    this.loginForm.datetime = new Date().getTime();
+    // 页面启动生成验证码标识
+    this.loginForm.captchaId = this.createCaptchaId();
     // // 判断是否存在登录信息
     // console.log(this.$store.state)
     if (this.$store.state.uid && this.$store.state.name && this.$store.state.gid && this.$store.state.isAdmin) {
@@ -72,13 +72,24 @@ export default {
   },
   computed: {
     captcha() {
-      return '/api/captcha?dateTime=' + this.loginForm.datetime;
+      return '/api/captcha?id=' + this.loginForm.captchaId;
     }
   },
   methods: {
+    createCaptchaId() {
+      if (window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID();
+      }
+      if (window.crypto && window.crypto.getRandomValues) {
+        const array = new Uint32Array(2);
+        window.crypto.getRandomValues(array);
+        return `${Date.now()}-${array[0].toString(16)}${array[1].toString(16)}`;
+      }
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    },
     // 点击更换验证码（将来更换验证方式）
     updateCaptcha() {
-      this.loginForm.datetime = new Date().getTime();
+      this.loginForm.captchaId = this.createCaptchaId();
     },
     /**
      * 根据tabs标签页返回相应的验证规则

@@ -77,8 +77,13 @@ export default {
       if (this.loader) {
         //获取比赛
         getRequest("/contestsList/" + this.page).then((resp) => {
-          if (resp.data){
+          if (resp && resp.data) {
             const data = resp.data.data;
+            if (!data || !Array.isArray(data.records)) {
+              this.loader = false;
+              this.loadingText = "暂无数据";
+              return;
+            }
             if (this.page === data.pages) {
               this.loader = false;
               this.loadingText = "没有更多了";

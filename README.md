@@ -30,6 +30,260 @@
 ### 项目启动
 使用idea打开BackEnd和FrontEnd，后端需要jdk1.8，前端需要Vue脚手架和node.js才可运行
 
+### Windows新手从零启动（一步一步照做）
+> 下面按“完全没配过环境”的情况写，建议严格按顺序执行。
+
+1. **先安装必备软件**
+   - Git（下载源码）
+   - JDK 8（后端要求 1.8）
+   - Node.js 18.x（前端建议主版本）
+   - MariaDB 10.6+（数据库）
+   - Redis（后端用到缓存）
+   - Maven（可选，仓库内有 `mvnw.cmd`，不装也能跑）
+   - 开发工具（推荐 IntelliJ IDEA + VS Code，二选一也可）
+
+2. **安装完成后，先在 PowerShell 验证版本**
+   ```powershell
+   git --version
+   java -version
+   node -v
+   npm -v
+   ```
+   - `java` 显示 1.8.x 即可
+   - `node` 建议是 18.x（不要用太新的 22/24）
+
+3. **下载并进入项目目录**
+   ```powershell
+   git clone https://github.com/young-43/Software-security.git
+   cd Software-security
+   ```
+
+4. **准备数据库（MariaDB）**
+   - 打开 MariaDB（命令行、Navicat、DBeaver 都可以）。如果你没有安装 MariaDB，也可以使用 MySQL（见下方“MariaDB可以替换为MySQL吗？”）。
+   - 依次执行下面 2 个 SQL 文件：
+     - `SourceCode/Sql/contest_web_create.sql`
+     - `SourceCode/Sql/contest_web_insert.sql`
+   - 这一步执行完后，会创建 `contest_web` 数据库并插入测试数据。
+
+5. **检查后端数据库配置**
+   - 文件：`SourceCode/BackEnd/src/main/resources/application.yml`
+   - 默认是本地数据库 `localhost:3306/contest_web`，账号密码通常为 `root/root`。
+   - 如果你的 MariaDB 密码不是 `root`，请把这里改成你自己的密码。
+
+6. **启动 Redis**
+   - 如果你安装的是 Windows 版 Redis，直接启动 Redis 服务或运行 `redis-server.exe`。
+   - 保持 Redis 在运行状态（默认端口 6379）。
+   - 可以用下面命令快速验证 Redis 是否启动成功：
+     ```powershell
+     redis-cli -p 6379 ping
+     ```
+     - 返回 `PONG` 说明 Redis 服务正常。
+
+7. **启动后端（Spring Boot）**
+   ```powershell
+   cd SourceCode\BackEnd
+   mvnw.cmd spring-boot:run
+   ```
+   - 首次启动会下载依赖，时间较长是正常的。
+   - 看到 Spring Boot 启动成功日志后，后端运行在 `http://localhost:8090`，接口前缀是 `/api`（完整前缀：`http://localhost:8090/api`）。
+
+8. **启动前端（Vue）**
+   ```powershell
+   cd ..\FrontEnd
+   npm install
+   npm run serve
+   ```
+   - 启动后访问：`http://localhost:8080`
+   - 如果出现 `digital envelope routines::unsupported`，请执行：
+     ```powershell
+     setx NODE_OPTIONS "--openssl-legacy-provider"
+     ```
+     关闭并重开 PowerShell 后再执行 `npm run serve`。
+
+9. **登录验证**
+   - 打开浏览器访问 `http://localhost:8080`
+   - 执行 `SourceCode/Sql/contest_web_insert.sql` 后，可使用本 README 下方“测试账号”表格中的账号登录（例如管理员 `admin/admin`）。
+
+10. **常见问题快速排查**
+   - 前端 `npm install` 失败：先确认 Node 版本是否为 18.x。
+   - 后端连不上数据库：检查 `application.yml` 里的用户名/密码、数据库名是否一致。
+   - 页面没有数据：确认你已经执行了 `contest_web_insert.sql`。
+   - 后端报 Redis 连接错误：确认 Redis 已启动且端口是 6379。
+
+### Redis 怎么启动？端口是否必须 6379？怎么改端口？
+不是必须固定 6379。这个项目后端使用 Spring Boot 的 Redis 自动配置：如果你不写 `spring.redis.port`，默认就是 `6379`；你也可以改成任意未占用端口，但要保证 **Redis 服务端端口** 和 **后端配置端口** 一致。
+
+#### 1. 启动 Redis（常见方式）
+   - **Windows（服务方式）**：在“服务”里启动 Redis 服务，或命令行启动 `redis-server.exe`。
+   - **Linux（systemd）**：
+     ```bash
+     sudo systemctl start redis
+     sudo systemctl status redis
+     ```
+   - **Docker**：
+     ```bash
+     docker run -d --name contest-redis -p 6379:6379 redis:7.2
+     ```
+
+#### 2. 端口是否有严格要求？
+   - 对项目本身：**没有硬编码必须 6379**。
+   - 对运行结果：必须“Redis 实际监听端口 == 后端 `application.yml` 配置端口”。
+
+#### 3. 改 Redis 端口的正确步骤
+   - 第一步：改 Redis 服务端配置（`redis.conf`）
+     ```conf
+     port 6380
+     ```
+     - 改完后重启 Redis 服务。
+   - 第二步：改后端配置文件  
+     文件：`SourceCode/BackEnd/src/main/resources/application.yml`
+     ```yml
+     spring:
+       redis:
+         host: localhost
+         port: 6380
+         database: 0
+         timeout: 5000
+     ```
+   - 第三步：验证连通性
+     ```bash
+     redis-cli -p 6380 ping
+     ```
+     - 返回 `PONG` 后再启动后端。
+
+#### 4. 常见错误
+   - Redis 改了端口，但后端还连 6379：会报连接超时/拒绝连接。
+   - Docker 映射端口写错（如 `-p 6379:6380`）：这是“宿主机端口 6379（左侧）:容器端口 6380（右侧）”，后端应连接宿主机端口 6379。
+
+### MariaDB可以替换为MySQL吗？
+可以。你是 **MySQL 8.0** 的话，按下面 3 个文件直接改即可（默认仓库仍是 MariaDB 配置）。
+
+需要改 3 处：
+
+1. 修改依赖（`SourceCode/BackEnd/pom.xml`）
+   - 将下面这段删掉：
+   ```xml
+   <dependency>
+       <groupId>org.mariadb.jdbc</groupId>
+       <artifactId>mariadb-java-client</artifactId>
+       <scope>runtime</scope>
+   </dependency>
+   ```
+   - 改成（MySQL 8.0）：
+   ```xml
+   <dependency>
+       <groupId>com.mysql</groupId>
+       <artifactId>mysql-connector-j</artifactId>
+       <version>8.0.33</version>
+       <scope>runtime</scope>
+   </dependency>
+   ```
+
+2. 修改数据源配置（`SourceCode/BackEnd/src/main/resources/application.yml`）
+   - 将这两行：
+   ```yml
+   driver-class-name: org.mariadb.jdbc.Driver
+   url: jdbc:mariadb://localhost:3306/contest_web?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+   ```
+   - 改为：
+   ```yml
+   driver-class-name: com.mysql.cj.jdbc.Driver
+   url: jdbc:mysql://localhost:3306/contest_web?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
+   ```
+
+3. 修改 MyBatis-Plus 分页方言（`SourceCode/BackEnd/src/main/java/com/zzh/contest/config/MybatisPlusConfig.java`）
+   - 将这一行：
+   ```java
+   interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MARIADB));
+   ```
+   - 改为：
+   ```java
+   interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+   ```
+
+`SourceCode/Sql` 下的建表和插入 SQL 可继续使用，不需要改 SQL 文件。
+
+#### MySQL 8.0 如何初始化数据库（详细步骤）
+下面按“你已经安装好 MySQL 8.0，但数据库还是空的”来写。
+
+1. 确认 MySQL 服务已启动
+   - Windows：先启动 MySQL80 服务（可在“服务”里启动，或用命令 `net start MySQL80`）。
+
+2. 进入项目根目录（你的仓库路径）
+   ```powershell
+   cd C:/Users/username/Desktop/Software-security
+   ```
+   - 上面是示例路径，请改成你自己电脑上的真实目录。
+
+3. 登录 MySQL 8.0
+   ```powershell
+   mysql -u root -p
+   ```
+   - 输入你自己的 root 密码。
+
+4. 执行建库建表脚本
+   ```sql
+   source SourceCode/Sql/contest_web_create.sql;
+   ```
+   - Windows 下也建议使用上面这种 `/` 写法，不要写成反斜杠路径。
+   - 这个脚本会先 `DROP DATABASE IF EXISTS contest_web`，再重新创建，所以可重复执行。
+
+5. 执行初始化数据脚本
+   ```sql
+   source SourceCode/Sql/contest_web_insert.sql;
+   ```
+   - 与上一步一样，路径建议保持 `/` 写法。
+
+6. 验证是否初始化成功
+   ```sql
+   use contest_web;
+   show tables;
+   select count(*) from users;
+   ```
+   - 如果 `users` 有数据（通常 > 0），说明初始化成功。
+
+7. 确认后端配置与 MySQL 一致
+   - 文件：`SourceCode/BackEnd/src/main/resources/application.yml`
+   - 重点确认：
+     - `driver-class-name: com.mysql.cj.jdbc.Driver`
+     - `url: jdbc:mysql://localhost:3306/contest_web?...`
+     - `username` / `password` 是你当前 MySQL 账号密码
+
+8. 图形化工具方式（Navicat / DBeaver）
+   - 新建 MySQL 8.0 连接后，依次运行：
+     - `SourceCode/Sql/contest_web_create.sql`
+     - `SourceCode/Sql/contest_web_insert.sql`
+   - 建议顺序仍是先 create 再 insert。
+
+9. 如果出现你这种报错（`Incorrect string value` / `Data too long` / 外键失败）
+   - **为什么会这样：**
+     - `Incorrect string value`：通常是连接字符集不是 `utf8mb4`，SQL 文件里的中文被错误解码。
+     - `Data too long`：中文被错误解码后变成乱码长字节，超出字段长度（例如 `VARCHAR(10)`）。
+     - 外键失败：前面用户/角色等插入失败后，后续关联表插入就会因为“父记录不存在”而失败。
+   - **一次性修复步骤（建议直接照抄执行）：**
+     1) 退出当前 mysql 会话，重新用 utf8mb4 登录：
+     ```powershell
+     mysql --default-character-set=utf8mb4 -u root -p
+     ```
+     2) 在 mysql 中确认连接字符集：
+     ```sql
+     show variables like 'character_set_client';
+     show variables like 'character_set_connection';
+     show variables like 'character_set_results';
+     ```
+     3) 重新执行初始化（会重建库）：
+     ```sql
+     source SourceCode/Sql/contest_web_create.sql;
+     source SourceCode/Sql/contest_web_insert.sql;
+     ```
+     4) 验证中文是否正常：
+     ```sql
+     use contest_web;
+     select group_name from `groups`;
+     select count(*) from users;
+     ```
+   - 本仓库 SQL 已补充 `SET NAMES utf8mb4` 且建库字符集为 `utf8mb4`，MySQL 8.0 下可直接使用。
+
 ### 开发环境
 | 名称               | 早期开发使用的版本          | 后续更新使用的版本           |
 | ------------------ | --------------------------- | ---------------------------- |

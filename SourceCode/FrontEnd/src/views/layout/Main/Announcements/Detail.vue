@@ -41,19 +41,30 @@ export default {
   },
   methods: {
     announcementLoading() {
-      getRequest("/messages/announcement/" + this.$route.params.messageId).then((res) => {
+      const messageId = this.$route.params.messageId;
+      if (!messageId) {
+        this.$message.error("无效的消息ID！");
+        return;
+      }
+      getRequest("/messages/announcement/" + messageId).then((res) => {
         const data = res.data.data;
+        if (!data) {
+          this.$message.error("无法加载消息内容！");
+          return;
+        }
         // console.log(data);
         if (data.recipient === 1 || data.recipient === this.$store.state.uid) {
           this.data = data;
           if (this.data.recipient !== this.data.sender && !this.data.status) {
             // console.log(this.$route.params.messageId)
-            putRequest("/messages/status", {messageId: this.$route.params.messageId, status: true});
+            putRequest("/messages/status", {messageId: messageId, status: true});
           }
         } else {
           this.$message.error("消息查询失败！");
         }
-      })
+      }).catch(() => {
+        this.$message.error("消息查询失败！");
+      });
     }
   }
 }
