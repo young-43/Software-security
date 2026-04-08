@@ -52,7 +52,7 @@ export default {
         phone: "",
         email: "",
         password: "",
-        datetime: "",
+        ulid: "",
         captcha: "",
       },
       rules: {
@@ -62,8 +62,8 @@ export default {
     };
   },
   mounted() {
-    // // 页面启动给datetime赋值时间戳
-    this.loginForm.datetime = new Date().getTime();
+    // 页面启动给ulid赋值时间戳
+    this.loginForm.ulid = new Date().getTime();
     // // 判断是否存在登录信息
     // console.log(this.$store.state)
     if (this.$store.state.uid && this.$store.state.name && this.$store.state.gid && this.$store.state.isAdmin) {
@@ -72,13 +72,13 @@ export default {
   },
   computed: {
     captcha() {
-      return '/api/captcha?dateTime=' + this.loginForm.datetime;
+      return '/api/captcha?ulid=' + this.loginForm.ulid;
     }
   },
   methods: {
     // 点击更换验证码（将来更换验证方式）
     updateCaptcha() {
-      this.loginForm.datetime = new Date().getTime();
+      this.loginForm.ulid = new Date().getTime();
     },
     /**
      * 根据tabs标签页返回相应的验证规则
