@@ -77,6 +77,14 @@ export default {
   },
   methods: {
     createCaptchaId() {
+      if (window.crypto && window.crypto.randomUUID) {
+        return window.crypto.randomUUID();
+      }
+      if (window.crypto && window.crypto.getRandomValues) {
+        const array = new Uint32Array(2);
+        window.crypto.getRandomValues(array);
+        return `${Date.now()}-${array[0].toString(16)}${array[1].toString(16)}`;
+      }
       return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     },
     // 点击更换验证码（将来更换验证方式）

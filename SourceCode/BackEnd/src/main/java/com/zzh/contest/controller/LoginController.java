@@ -53,7 +53,7 @@ public class LoginController {
         // 将id作为key（兼容旧参数ulid），验证码作为value存入redis
         String captchaKey = StringUtils.hasText(id) ? id : ulid;
         if (!StringUtils.hasText(captchaKey)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "captcha key is required");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required captcha identifier parameter: id or ulid");
             return;
         }
         try {
