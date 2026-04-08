@@ -52,10 +52,12 @@ public class LoginController {
         System.out.println("计算结果为：" + captcha.text());
         // 将id作为key（兼容旧参数ulid），验证码作为value存入redis
         String captchaKey = StringUtils.hasText(id) ? id : ulid;
+        if (!StringUtils.hasText(captchaKey)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "captcha key is required");
+            return;
+        }
         try {
-            if (StringUtils.hasText(captchaKey)) {
-                redisCache.setCacheObject(captchaKey, captcha.text(), 1, TimeUnit.MINUTES);
-            }
+            redisCache.setCacheObject(captchaKey, captcha.text(), 1, TimeUnit.MINUTES);
         } catch (Exception e) {
             System.out.println("存入Redis失败");
         } finally {

@@ -62,8 +62,8 @@ export default {
     };
   },
   mounted() {
-    // 页面启动给captchaId赋值时间戳
-    this.loginForm.captchaId = new Date().getTime();
+    // 页面启动生成验证码标识
+    this.loginForm.captchaId = this.createCaptchaId();
     // // 判断是否存在登录信息
     // console.log(this.$store.state)
     if (this.$store.state.uid && this.$store.state.name && this.$store.state.gid && this.$store.state.isAdmin) {
@@ -76,9 +76,12 @@ export default {
     }
   },
   methods: {
+    createCaptchaId() {
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    },
     // 点击更换验证码（将来更换验证方式）
     updateCaptcha() {
-      this.loginForm.captchaId = new Date().getTime();
+      this.loginForm.captchaId = this.createCaptchaId();
     },
     /**
      * 根据tabs标签页返回相应的验证规则
