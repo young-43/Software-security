@@ -72,7 +72,7 @@ export default {
   },
   computed: {
     captcha() {
-      return '/api/captcha?ulid=' + this.loginForm.captchaId;
+      return '/api/captcha?id=' + this.loginForm.captchaId;
     }
   },
   methods: {
