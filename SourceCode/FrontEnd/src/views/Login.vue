@@ -128,7 +128,7 @@ export default {
             }
 
           }).catch((error) => {
-            if (error && error.response && error.response.data && error.response.data.msg) {
+            if (error?.response?.data?.msg) {
               this.$message.error(error.response.data.msg);
             } else {
               this.$message.error("登录失败，请稍后重试");
