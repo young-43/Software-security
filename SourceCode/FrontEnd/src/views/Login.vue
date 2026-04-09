@@ -106,7 +106,7 @@ export default {
         if (valid) {
           postRequest("/login", this.loginForm).then((res) => {
             // console.log(res)
-            const token = res.data && res.data.data ? res.data.data.token : null;
+            const token = res.data?.data?.token;
             if (token){
               if (this.checked) {
                 localStorage.setItem("token", token)
