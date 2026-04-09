@@ -27,18 +27,22 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(success => {
     return success;
 }, error => {
-    switch (error.response.status) {
-        case 500:
-            console.log("内部服务器错误！")
-            break;
-        case 400:
-            console.log("错误的请求！")
-            break;
-        default:
-            console.log("未知错误！")
-            break;
+    if (error.response) {
+        switch (error.response.status) {
+            case 500:
+                console.log("内部服务器错误！")
+                break;
+            case 400:
+                console.log("错误的请求！")
+                break;
+            default:
+                console.log("未知错误！")
+                break;
+        }
+    } else {
+        console.log("网络错误！")
     }
-    return error;
+    return Promise.reject(error);
 
 })
 
